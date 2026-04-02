@@ -1,0 +1,24 @@
+Name:           hashmyfiles
+Version:        VERSION_PLACEHOLDER
+Release:        1%{?dist}
+Summary:        File integrity scanner and verifier
+License:        MIT
+BuildArch:      x86_64
+Requires:       gtk4 libadwaita
+
+%description
+Scans files and generates cryptographic hash databases (SHA-256,
+SHA-512, BLAKE3) for integrity verification.
+
+%install
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/share/applications
+mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
+install -m755 %{_sourcedir}/hashmyfiles %{buildroot}/usr/bin/
+install -m644 %{_sourcedir}/hashmyfiles.desktop %{buildroot}/usr/share/applications/
+install -m644 %{_sourcedir}/icon.svg %{buildroot}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+
+%files
+/usr/bin/hashmyfiles
+/usr/share/applications/hashmyfiles.desktop
+/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg

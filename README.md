@@ -33,9 +33,6 @@ A professional file integrity scanner and verifier for Linux, built with **Rust 
 
 ---
 
-## Screenshots
-
-> Professional retro dark theme — charcoal background, blue accents, CRT scanline overlay.
 
 ---
 
@@ -43,7 +40,7 @@ A professional file integrity scanner and verifier for Linux, built with **Rust 
 
 ### Pre-built packages (recommended)
 
-Download from the [Releases](https://github.com/yourusername/hashmyfiles/releases) page:
+Download from the [Releases](https://github.com/jegly/HashMyFiles/releases) page:
 
 ```bash
 # Ubuntu / Debian (.deb)
@@ -175,3 +172,5 @@ All background work runs on `std::thread` threads (not tokio). Progress updates 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+JEGLY / CLAUDE 

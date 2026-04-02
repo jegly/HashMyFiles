@@ -1,0 +1,10 @@
+Package: hashmyfiles
+Version: VERSION_PLACEHOLDER
+Architecture: amd64
+Maintainer: Jegly <jegly@hashmyfiles>
+Depends: libgtk-4-1, libadwaita-1-0
+Section: utils
+Priority: optional
+Description: File integrity scanner and verifier
+ Scans files and generates cryptographic hash databases
+ (SHA-256, SHA-512, BLAKE3) for integrity verification.

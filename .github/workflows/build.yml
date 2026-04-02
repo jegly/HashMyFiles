@@ -66,7 +66,7 @@ jobs:
 
       - name: Assemble .deb
         run: |
-          VERSION=$(cargo metadata --no-deps --format-version 1 | python3 -c "import sys,json; print(json.load(sys.stdin)['packages'][0]['version'])")
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
           PKG=hashmyfiles_${VERSION}_amd64
           mkdir -p dist/${PKG}/DEBIAN dist/${PKG}/usr/bin \
             dist/${PKG}/usr/share/applications \
@@ -111,7 +111,7 @@ jobs:
 
       - name: Assemble .rpm
         run: |
-          VERSION=$(cargo metadata --no-deps --format-version 1 | python3 -c "import sys,json; print(json.load(sys.stdin)['packages'][0]['version'])")
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
           rpmdev-setuptree
           cp target/release/hashmyfiles ~/rpmbuild/SOURCES/
           cp resources/hashmyfiles.desktop ~/rpmbuild/SOURCES/

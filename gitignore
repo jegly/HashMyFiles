@@ -1,0 +1,13 @@
+# Rust build output
+/target/
+
+# Debian build artifacts
+debian/hashmyfiles/
+debian/cargo_home/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/hashmyfiles.substvars
+debian/files
+*.buildinfo
+*.changes
+*.deb

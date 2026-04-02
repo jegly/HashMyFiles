@@ -46,9 +46,6 @@ Download from the [Releases](https://github.com/jegly/HashMyFiles/releases) page
 # Ubuntu / Debian (.deb)
 sudo dpkg -i hashmyfiles_*_amd64.deb
 
-# Fedora / RHEL (.rpm)
-sudo rpm -i hashmyfiles-*.rpm
-
 ```
 
 ### Build from source

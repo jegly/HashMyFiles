@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo build --release
+
+override_dh_auto_install:
+	install -Dm755 target/release/hashmyfiles \
+		debian/hashmyfiles/usr/bin/hashmyfiles
+	install -Dm644 resources/hashmyfiles.desktop \
+		debian/hashmyfiles/usr/share/applications/hashmyfiles.desktop
+	install -Dm644 resources/icon.svg \
+		debian/hashmyfiles/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+
+override_dh_auto_test:
+	# skip tests
+
+override_dh_auto_clean:
+	cargo clean || true

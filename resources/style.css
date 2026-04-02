@@ -1,0 +1,533 @@
+/* ════════════════════════════════════════════════════════════
+   HashMyFiles — Dracula-influenced Retro Theme
+   Dark:  Dracula palette  |  Light: Dracula-purple on silver
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Dracula palette references ─── */
+/* Background:  #282A36   Current:   #44475A   Selection: #44475A  */
+/* Foreground:  #F8F8F2   Comment:   #6272A4   Cyan:      #8BE9FD  */
+/* Purple:      #BD93F9   Pink:      #FF79C6   Green:     #50FA7B  */
+/* Orange:      #FFB86C   Red:       #FF5555   Yellow:    #F1FA8C  */
+
+/* ─── Dark mode tokens (default) ─── */
+@define-color bg_primary       #282A36;
+@define-color bg_secondary     #21222C;
+@define-color bg_elevated      #44475A;
+@define-color bg_sunken        #191A21;
+@define-color border_raise     #6272A4;
+@define-color border_sink      #191A21;
+@define-color text_primary     #F8F8F2;
+@define-color text_dim         #6272A4;
+@define-color accent           #50FA7B;
+@define-color accent_light     #69FF90;
+@define-color accent_dim       #2A8A44;
+@define-color header_bg        #1E1F29;
+@define-color diff_modified    #FFB86C;
+@define-color diff_missing     #FF5555;
+@define-color diff_new         #50FA7B;
+@define-color diff_unchanged   #6272A4;
+@define-color btn_face         #44475A;
+@define-color btn_shadow       #191A21;
+@define-color btn_highlight    #6272A4;
+
+/* ════ LIGHT MODE — applied when window has .light-mode class ════
+   Header:  Dracula purple #6E3F91 (deep purple, almost black-purple)
+   Text:    #1A0530 (very dark purple, near-black)
+   Accent:  #6E3F91 (same purple family)
+   Base:    Win95 silver #C0C0C0
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Window base (dark default) ─── */
+window, .view, scrolledwindow > viewport {
+    background-color: @bg_primary;
+    color: @text_primary;
+}
+
+/* ─── Header bar — Dracula dark ─── */
+headerbar {
+    background-color: @header_bg;
+    color: #F8F8F2;
+    border-bottom: 1px solid #BD93F9;
+    box-shadow: none;
+    min-height: 36px;
+}
+
+headerbar label { color: #F8F8F2; font-weight: bold; }
+
+/* ─── ViewSwitcher in header ─── */
+viewswitcher button {
+    background-color: transparent;
+    color: #6272A4;
+    border: none;
+    border-radius: 0;
+    padding: 4px 18px;
+    font-family: "Source Code Pro", "Fira Code", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+viewswitcher button:hover {
+    background-color: rgba(189,147,249,0.12);
+    color: #BD93F9;
+}
+
+viewswitcher button:checked,
+viewswitcher button.active {
+    background-color: @bg_primary;
+    color: #50FA7B;
+    border-bottom: 2px solid #50FA7B;
+}
+
+/* ─── Monospace ─── */
+.monospace {
+    font-family: "Source Code Pro", "Fira Code", "Courier New", monospace;
+    font-size: 12px;
+}
+
+/* ─── Preferences group titles ─── */
+preferencesgroup > box > label {
+    color: #BD93F9;
+    font-weight: 700;
+    font-family: "Source Code Pro", monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+/* ─── Rows ─── */
+row {
+    background-color: @bg_secondary;
+    border-bottom: 1px solid @border_sink;
+}
+row:last-child { border-bottom: none; }
+row title   { color: @text_primary; font-size: 13px; }
+row subtitle { color: @text_dim; font-size: 11px; }
+row:hover   { background-color: @bg_elevated; }
+
+/* ─── Retro bevelled buttons ─── */
+.retro-btn {
+    background-color: @btn_face;
+    color: @text_primary;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @btn_highlight;
+    border-left-color:   @btn_highlight;
+    border-right-color:  @btn_shadow;
+    border-bottom-color: @btn_shadow;
+    border-radius: 0px;
+    padding: 5px 14px;
+    font-family: "Source Code Pro", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    transition: none;
+}
+
+.retro-btn:hover {
+    background-color: #44475A;
+    color: #50FA7B;
+    border-top-color:    #50FA7B;
+    border-left-color:   #50FA7B;
+    border-right-color:  #2A8A44;
+    border-bottom-color: #2A8A44;
+}
+
+.retro-btn:active {
+    border-top-color:    @btn_shadow;
+    border-left-color:   @btn_shadow;
+    border-right-color:  @btn_highlight;
+    border-bottom-color: @btn_highlight;
+    padding: 6px 13px 4px 15px;
+}
+
+.retro-btn.suggested-action {
+    background-color: @accent_dim;
+    color: #E8FFE8;
+    border-top-color:    @accent_light;
+    border-left-color:   @accent_light;
+    border-right-color:  #0A2E1A;
+    border-bottom-color: #0A2E1A;
+    font-weight: 700;
+}
+
+.retro-btn.suggested-action:hover {
+    background-color: @accent;
+    color: #282A36;
+}
+
+.retro-btn.destructive-action {
+    color: #FF5555;
+    border-top-color:    #FF8888;
+    border-left-color:   #FF8888;
+    border-right-color:  #881111;
+    border-bottom-color: #881111;
+}
+
+.retro-btn.destructive-action:hover {
+    background-color: #FF5555;
+    color: #F8F8F2;
+}
+
+/* ─── Entries ─── */
+entry, entryrow text {
+    background-color: @bg_sunken;
+    color: @text_primary;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @border_sink;
+    border-left-color:   @border_sink;
+    border-right-color:  @border_raise;
+    border-bottom-color: @border_raise;
+    border-radius: 0;
+    caret-color: #50FA7B;
+    font-family: "Source Code Pro", monospace;
+    font-size: 12px;
+}
+
+entry:focus, entryrow text:focus {
+    border-top-color:    #BD93F9;
+    border-left-color:   #BD93F9;
+    box-shadow: none;
+}
+
+/* ─── Progress bar ─── */
+.retro-progress trough {
+    background-color: @bg_sunken;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @border_sink;
+    border-left-color:   @border_sink;
+    border-right-color:  @border_raise;
+    border-bottom-color: @border_raise;
+    border-radius: 0;
+    min-height: 18px;
+}
+
+.retro-progress progress {
+    background: repeating-linear-gradient(
+        90deg,
+        #50FA7B 0px, #50FA7B 10px,
+        #2A8A44 10px, #2A8A44 12px
+    );
+    border-radius: 0;
+}
+
+/* ─── Labels ─── */
+.status-label {
+    color: @text_dim;
+    font-size: 11px;
+    font-family: "Source Code Pro", monospace;
+}
+
+.stats-label {
+    color: #BD93F9;
+    font-size: 11px;
+    font-family: "Source Code Pro", monospace;
+    padding: 4px 0;
+    border-bottom: 1px solid @border_sink;
+}
+
+/* ─── Log terminal ─── */
+.log-view {
+    background-color: @bg_sunken;
+    color: #50FA7B;
+    font-family: "Source Code Pro", "Courier New", monospace;
+    font-size: 11px;
+    padding: 6px;
+}
+
+.log-scroll {
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @border_sink;
+    border-left-color:   @border_sink;
+    border-right-color:  @border_raise;
+    border-bottom-color: @border_raise;
+}
+
+/* ─── Diff list ─── */
+.diff-list {
+    background-color: @bg_secondary;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @border_sink;
+    border-left-color:   @border_sink;
+    border-right-color:  @border_raise;
+    border-bottom-color: @border_raise;
+}
+
+.diff-list row            { border-bottom: 1px solid @border_sink; }
+.diff-list row:hover      { background-color: @bg_elevated; }
+.diff-list row:selected   { background-color: #44475A; color: #F8F8F2; }
+
+/* ─── Diff colours ─── */
+.diff-unchanged { color: @diff_unchanged; }
+.diff-modified  { color: @diff_modified; }
+.diff-missing   { color: @diff_missing; }
+.diff-new       { color: @diff_new; }
+
+/* ─── Status badges ─── */
+.status-badge {
+    font-family: "Source Code Pro", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 0px;
+    border: 1px solid currentColor;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.status-badge.diff-modified  { background-color: rgba(255,184,108,0.10); }
+.status-badge.diff-missing   { background-color: rgba(255,85,85,0.10); }
+.status-badge.diff-new       { background-color: rgba(80,250,123,0.10); }
+.status-badge.diff-unchanged { background-color: rgba(98,114,164,0.10); }
+
+/* ─── Hash detail ─── */
+.hash-subtitle { color: @text_dim; font-size: 11px; }
+
+/* ─── Filter buttons ─── */
+.filter-btn {
+    background-color: @btn_face;
+    color: @text_dim;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @btn_highlight;
+    border-left-color:   @btn_highlight;
+    border-right-color:  @btn_shadow;
+    border-bottom-color: @btn_shadow;
+    border-radius: 0;
+    padding: 3px 10px;
+    font-family: "Source Code Pro", monospace;
+    font-size: 11px;
+}
+
+.filter-btn:hover { color: @text_primary; background-color: @bg_elevated; }
+
+.filter-btn:active {
+    border-top-color:    @btn_shadow;
+    border-left-color:   @btn_shadow;
+    border-right-color:  @btn_highlight;
+    border-bottom-color: @btn_highlight;
+}
+
+/* ─── Scrollbars ─── */
+scrollbar { background-color: @bg_secondary; }
+scrollbar slider {
+    background-color: @btn_face;
+    border-style: solid;
+    border-width: 1px;
+    border-top-color:    @btn_highlight;
+    border-left-color:   @btn_highlight;
+    border-right-color:  @btn_shadow;
+    border-bottom-color: @btn_shadow;
+    min-width: 14px;
+    min-height: 14px;
+    border-radius: 0;
+}
+scrollbar slider:hover { background-color: @accent_dim; }
+
+separator { background-color: @border_sink; }
+
+dropdown, combobox {
+    background-color: @btn_face;
+    color: @text_primary;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color:    @btn_highlight;
+    border-left-color:   @btn_highlight;
+    border-right-color:  @btn_shadow;
+    border-bottom-color: @btn_shadow;
+    border-radius: 0;
+    font-family: "Source Code Pro", monospace;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LIGHT MODE — .light-mode on window
+   Header:  #44275A (deep Dracula purple, near-black)
+   Text:    #1A0A2E (very dark purple — almost black)
+   Accent:  #6E3F91
+   Base:    #C0C0C0 Win95 silver
+   ════════════════════════════════════════════════════════════ */
+
+window.light-mode,
+window.light-mode .view,
+window.light-mode scrolledwindow > viewport {
+    background-color: #C0C0C0;
+    color: #1A0A2E;
+}
+
+window.light-mode headerbar {
+    background-color: #44275A;
+    color: #F8F8F2;
+    border-bottom-color: #6E3F91;
+}
+
+window.light-mode headerbar label { color: #F8F8F2; }
+
+window.light-mode viewswitcher button { color: #C9A8E0; }
+window.light-mode viewswitcher button:hover { color: #F8F8F2; }
+window.light-mode viewswitcher button:checked {
+    background-color: #C0C0C0;
+    color: #44275A;
+    border-bottom-color: #44275A;
+}
+
+window.light-mode preferencesgroup > box > label { color: #6E3F91; }
+
+window.light-mode row             { background-color: #D4D0C8; border-bottom-color: #A0A0A0; }
+window.light-mode row:hover       { background-color: #E8E4E0; }
+window.light-mode row title       { color: #1A0A2E; }
+window.light-mode row subtitle    { color: #44275A; }
+
+window.light-mode .retro-btn {
+    background-color: #D4D0C8;
+    color: #1A0A2E;
+    border-top-color:    #FFFFFF;
+    border-left-color:   #FFFFFF;
+    border-right-color:  #808080;
+    border-bottom-color: #808080;
+}
+
+window.light-mode .retro-btn:hover {
+    background-color: #E8E4E0;
+    color: #6E3F91;
+    border-top-color:    #9B59B6;
+    border-left-color:   #9B59B6;
+    border-right-color:  #2C1040;
+    border-bottom-color: #2C1040;
+}
+
+window.light-mode .retro-btn:active {
+    border-top-color:    #808080;
+    border-left-color:   #808080;
+    border-right-color:  #FFFFFF;
+    border-bottom-color: #FFFFFF;
+}
+
+window.light-mode .retro-btn.suggested-action {
+    background-color: #44275A;
+    color: #F8F8F2;
+    border-top-color:    #9B59B6;
+    border-left-color:   #9B59B6;
+    border-right-color:  #1A0A2E;
+    border-bottom-color: #1A0A2E;
+}
+
+window.light-mode .retro-btn.suggested-action:hover {
+    background-color: #6E3F91;
+    color: #FFFFFF;
+}
+
+window.light-mode .retro-btn.destructive-action {
+    color: #AA0000;
+    border-top-color: #FF8888;
+    border-left-color: #FF8888;
+    border-right-color: #601010;
+    border-bottom-color: #601010;
+}
+
+window.light-mode entry,
+window.light-mode entryrow text {
+    background-color: #FFFFFF;
+    color: #1A0A2E;
+    border-top-color:    #808080;
+    border-left-color:   #808080;
+    border-right-color:  #FFFFFF;
+    border-bottom-color: #FFFFFF;
+    caret-color: #6E3F91;
+}
+
+window.light-mode entry:focus,
+window.light-mode entryrow text:focus {
+    border-top-color:    #6E3F91;
+    border-left-color:   #6E3F91;
+}
+
+window.light-mode .log-view {
+    background-color: #0D000D;
+    color: #50FA7B;
+}
+
+window.light-mode .log-scroll {
+    border-top-color:    #808080;
+    border-left-color:   #808080;
+    border-right-color:  #FFFFFF;
+    border-bottom-color: #FFFFFF;
+}
+
+window.light-mode .retro-progress trough {
+    background-color: #FFFFFF;
+    border-top-color:    #808080;
+    border-left-color:   #808080;
+    border-right-color:  #FFFFFF;
+    border-bottom-color: #FFFFFF;
+}
+
+window.light-mode .retro-progress progress {
+    background: repeating-linear-gradient(
+        90deg,
+        #44275A 0px, #44275A 10px,
+        #2C1040 10px, #2C1040 12px
+    );
+}
+
+window.light-mode .diff-list {
+    background-color: #FFFFFF;
+    border-top-color:    #808080;
+    border-left-color:   #808080;
+    border-right-color:  #FFFFFF;
+    border-bottom-color: #FFFFFF;
+}
+
+window.light-mode .diff-list row           { background-color: #FFFFFF; }
+window.light-mode .diff-list row:hover     { background-color: #EDE8F5; }
+window.light-mode .diff-list row:selected  { background-color: #44275A; color: #F8F8F2; }
+
+window.light-mode .diff-unchanged { color: #44275A; }
+window.light-mode .diff-modified  { color: #8B5000; }
+window.light-mode .diff-missing   { color: #AA0000; }
+window.light-mode .diff-new       { color: #006400; }
+
+window.light-mode .stats-label    { color: #6E3F91; }
+window.light-mode .status-label   { color: #44275A; }
+window.light-mode .hash-subtitle  { color: #44275A; }
+
+window.light-mode scrollbar         { background-color: #C0C0C0; }
+window.light-mode scrollbar slider  {
+    background-color: #D4D0C8;
+    border-top-color:    #FFFFFF;
+    border-left-color:   #FFFFFF;
+    border-right-color:  #808080;
+    border-bottom-color: #808080;
+}
+
+window.light-mode .filter-btn {
+    background-color: #D4D0C8;
+    color: #1A0A2E;
+    border-top-color:    #FFFFFF;
+    border-left-color:   #FFFFFF;
+    border-right-color:  #808080;
+    border-bottom-color: #808080;
+}
+
+window.light-mode .filter-btn:hover { color: #6E3F91; }
+
+/* ─── Section title labels (path entry headers) ─── */
+.section-title {
+    color: @accent_light;
+    font-family: "Source Code Pro", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.path-section {
+    padding: 4px 0;
+}
+
+window.light-mode .section-title { color: #6E3F91; }
+window.light-mode .dim-label { color: #44275A; }

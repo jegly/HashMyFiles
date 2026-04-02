@@ -1,0 +1,320 @@
+name: Build & Package
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  BINARY_NAME: hashmyfiles
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # 1. Build + test on stable Rust
+  # ──────────────────────────────────────────────────────────────
+  test:
+    name: Cargo test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GTK4 / libadwaita deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev libadwaita-1-dev \
+            libglib2.0-dev libgio2.0-cil-dev \
+            pkg-config
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Run tests
+        run: cargo test --all
+
+  # ──────────────────────────────────────────────────────────────
+  # 2. .deb package (Ubuntu/Debian)
+  # ──────────────────────────────────────────────────────────────
+  deb:
+    name: Build .deb
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev libadwaita-1-dev \
+            libglib2.0-dev pkg-config \
+            debhelper devscripts dpkg-dev \
+            cargo rustc
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: deb-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Assemble .deb manually
+        run: |
+          VERSION=$(cargo metadata --no-deps --format-version 1 \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['packages'][0]['version'])")
+          PKG=hashmyfiles_${VERSION}_amd64
+
+          mkdir -p dist/${PKG}/DEBIAN
+          mkdir -p dist/${PKG}/usr/bin
+          mkdir -p dist/${PKG}/usr/share/applications
+          mkdir -p dist/${PKG}/usr/share/icons/hicolor/scalable/apps
+
+          cp target/release/hashmyfiles dist/${PKG}/usr/bin/
+          cp resources/hashmyfiles.desktop dist/${PKG}/usr/share/applications/
+          cp resources/icon.svg dist/${PKG}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+
+          cat > dist/${PKG}/DEBIAN/control <<EOF
+          Package: hashmyfiles
+          Version: ${VERSION}
+          Architecture: amd64
+          Maintainer: HashMyFiles Contributors <hashmyfiles@example.com>
+          Depends: libgtk-4-1, libadwaita-1-0
+          Section: utils
+          Priority: optional
+          Description: File integrity scanner and verifier
+           Scans files and generates cryptographic hash databases
+           (SHA-256, SHA-512, BLAKE3) for integrity verification.
+          EOF
+
+          dpkg-deb --build --root-owner-group dist/${PKG}
+          mv dist/${PKG}.deb dist/hashmyfiles_${VERSION}_amd64.deb
+          echo "DEB_PATH=dist/hashmyfiles_${VERSION}_amd64.deb" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashmyfiles-deb
+          path: ${{ env.DEB_PATH }}
+
+  # ──────────────────────────────────────────────────────────────
+  # 3. .rpm package (Fedora/RHEL) via cross-build container
+  # ──────────────────────────────────────────────────────────────
+  rpm:
+    name: Build .rpm
+    needs: test
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora:40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Fedora build deps
+        run: |
+          dnf install -y \
+            gtk4-devel libadwaita-devel \
+            glib2-devel pkgconf \
+            cargo rust \
+            rpm-build rpmdevtools
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rpm-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Create RPM spec
+        run: |
+          VERSION=$(cargo metadata --no-deps --format-version 1 \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['packages'][0]['version'])")
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+          rpmdev-setuptree
+          cp target/release/hashmyfiles ~/rpmbuild/SOURCES/
+          cp resources/hashmyfiles.desktop ~/rpmbuild/SOURCES/
+          cp resources/icon.svg ~/rpmbuild/SOURCES/
+
+          cat > ~/rpmbuild/SPECS/hashmyfiles.spec <<EOF
+          Name:           hashmyfiles
+          Version:        ${VERSION}
+          Release:        1%{?dist}
+          Summary:        File integrity scanner and verifier
+          License:        MIT
+          BuildArch:      x86_64
+
+          Requires:       gtk4 libadwaita
+
+          %description
+          Scans files and generates cryptographic hash databases (SHA-256,
+          SHA-512, BLAKE3) for integrity verification. Features multi-threaded
+          scanning, interactive diff viewer, and export to TXT/JSON/CSV.
+
+          %install
+          mkdir -p %{buildroot}/usr/bin
+          mkdir -p %{buildroot}/usr/share/applications
+          mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
+
+          install -m755 %{_sourcedir}/hashmyfiles %{buildroot}/usr/bin/
+          install -m644 %{_sourcedir}/hashmyfiles.desktop \
+            %{buildroot}/usr/share/applications/
+          install -m644 %{_sourcedir}/icon.svg \
+            %{buildroot}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+
+          %files
+          /usr/bin/hashmyfiles
+          /usr/share/applications/hashmyfiles.desktop
+          /usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+          EOF
+
+          rpmbuild -bb ~/rpmbuild/SPECS/hashmyfiles.spec
+          cp ~/rpmbuild/RPMS/x86_64/hashmyfiles-${VERSION}-1.*.rpm dist/ || true
+
+      - name: Upload .rpm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashmyfiles-rpm
+          path: dist/*.rpm
+
+  # ──────────────────────────────────────────────────────────────
+  # 4. AppImage (portable, distro-agnostic)
+  # ──────────────────────────────────────────────────────────────
+  appimage:
+    name: Build AppImage
+    needs: test
+    runs-on: ubuntu-22.04   # older base = broader glibc compat
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev libadwaita-1-dev \
+            libglib2.0-dev pkg-config \
+            wget fuse libfuse2 file
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: appimage-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Download linuxdeploy + GTK plugin
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-gtk-x86_64.AppImage
+
+      - name: Assemble AppDir
+        run: |
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+
+          cp target/release/hashmyfiles AppDir/usr/bin/
+          cp resources/hashmyfiles.desktop AppDir/usr/share/applications/
+          cp resources/icon.svg AppDir/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+
+      - name: Build AppImage
+        env:
+          DEPLOY_GTK_VERSION: 4
+        run: |
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir AppDir \
+            --plugin gtk \
+            --output appimage \
+            --desktop-file resources/hashmyfiles.desktop \
+            --icon-file resources/icon.svg
+          ls -lh *.AppImage
+          mkdir -p dist
+          mv *.AppImage dist/
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashmyfiles-appimage
+          path: dist/*.AppImage
+
+  # ──────────────────────────────────────────────────────────────
+  # 5. Create GitHub Release (on tag push only)
+  # ──────────────────────────────────────────────────────────────
+  release:
+    name: GitHub Release
+    needs: [deb, rpm, appimage]
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "HashMyFiles ${{ github.ref_name }}"
+          body: |
+            ## HashMyFiles ${{ github.ref_name }}
+
+            ### Downloads
+            | Package | Platform |
+            |---------|----------|
+            | `.deb`  | Ubuntu 23.04+, Debian 12+ |
+            | `.rpm`  | Fedora 38+, RHEL 9+ |
+            | `.AppImage` | Any Linux (portable) |
+
+            ### Install
+            ```bash
+            # .deb
+            sudo dpkg -i hashmyfiles_*_amd64.deb
+
+            # .rpm
+            sudo rpm -i hashmyfiles-*.rpm
+
+            # AppImage
+            chmod +x hashmyfiles-*.AppImage && ./hashmyfiles-*.AppImage
+            ```
+          draft: false
+          prerelease: false
+          files: |
+            dist/**/*.deb
+            dist/**/*.rpm
+            dist/**/*.AppImage

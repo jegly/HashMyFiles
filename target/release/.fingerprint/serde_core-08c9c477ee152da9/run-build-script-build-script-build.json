@@ -1,0 +1,1 @@
+{"rustc":18276270781310494267,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[11899261697793765154,"build_script_build",false,14100786261083876915]],"local":[{"RerunIfChanged":{"output":"release/build/serde_core-08c9c477ee152da9/output","paths":["build.rs"]}}],"rustflags":["-Cforce-frame-pointers=yes"],"config":0,"compile_kind":0}

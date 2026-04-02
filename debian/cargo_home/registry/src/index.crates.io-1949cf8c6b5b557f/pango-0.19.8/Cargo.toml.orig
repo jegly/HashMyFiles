@@ -1,0 +1,36 @@
+[package]
+name = "pango"
+documentation = "https://gtk-rs.org/gtk-rs-core/stable/latest/docs/pango/"
+keywords = ["pango", "gtk-rs", "gnome"]
+readme = "README.md"
+description = "Rust bindings for the Pango library"
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[features]
+v1_42 = ["ffi/v1_42"]
+v1_44 = ["v1_42", "ffi/v1_44"]
+v1_46 = ["v1_44", "ffi/v1_46"]
+v1_48 = ["v1_46", "ffi/v1_48"]
+v1_50 = ["v1_48", "ffi/v1_50"]
+v1_52 = ["v1_50", "ffi/v1_52"]
+
+[dependencies]
+ffi = { package = "pango-sys", path = "sys", version = "0.19" }
+libc.workspace = true
+glib.workspace = true
+gio.workspace = true
+
+[dev-dependencies]
+gir-format-check.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]

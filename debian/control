@@ -1,0 +1,18 @@
+Source: hashmyfiles
+Section: utils
+Priority: optional
+Maintainer: Jegly <jegly@hashmyfiles>
+Build-Depends: debhelper-compat (= 13), cargo, rustc, libgtk-4-dev, libadwaita-1-dev
+Standards-Version: 4.6.0
+Homepage: https://github.com/jegly/hashmyfiles
+
+Package: hashmyfiles
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgtk-4-1, libadwaita-1-0
+Description: File integrity scanner and verifier
+ HashMyFiles scans files and generates cryptographic hash databases
+ (SHA-256, SHA-512, BLAKE3) for integrity verification. Features
+ multi-threaded scanning, interactive diff viewer, and export to
+ TXT/JSON/CSV formats.
+ .
+ Created by Jegly.

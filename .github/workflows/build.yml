@@ -13,7 +13,7 @@ env:
 
 jobs:
   # ──────────────────────────────────────────────────────────────
-  # 1. Build + test on stable Rust
+  # 1. Build + test
   # ──────────────────────────────────────────────────────────────
   test:
     name: Cargo test
@@ -26,13 +26,11 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             libgtk-4-dev libadwaita-1-dev \
-            libglib2.0-dev \
-            pkg-config
+            libglib2.0-dev pkg-config
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo registry
+      - name: Cache Cargo
         uses: actions/cache@v4
         with:
           path: |
@@ -46,7 +44,7 @@ jobs:
         run: cargo test --all
 
   # ──────────────────────────────────────────────────────────────
-  # 2. .deb package (Ubuntu/Debian)
+  # 2. .deb package
   # ──────────────────────────────────────────────────────────────
   deb:
     name: Build .deb
@@ -61,8 +59,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libgtk-4-dev libadwaita-1-dev \
             libglib2.0-dev pkg-config \
-            debhelper devscripts dpkg-dev \
-            cargo rustc
+            debhelper devscripts dpkg-dev
 
       - uses: dtolnay/rust-toolchain@stable
 
@@ -78,12 +75,11 @@ jobs:
       - name: Build release binary
         run: cargo build --release
 
-      - name: Assemble .deb manually
+      - name: Assemble .deb
         run: |
           VERSION=$(cargo metadata --no-deps --format-version 1 \
             | python3 -c "import sys,json; print(json.load(sys.stdin)['packages'][0]['version'])")
           PKG=hashmyfiles_${VERSION}_amd64
-
           mkdir -p dist/${PKG}/DEBIAN
           mkdir -p dist/${PKG}/usr/bin
           mkdir -p dist/${PKG}/usr/share/applications
@@ -93,23 +89,21 @@ jobs:
           cp resources/hashmyfiles.desktop dist/${PKG}/usr/share/applications/
           cp resources/icon.svg dist/${PKG}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
 
-          cat > dist/${PKG}/DEBIAN/control <<EOF
-          Package: hashmyfiles
-          Version: ${VERSION}
-          Architecture: amd64
-          Maintainer: HashMyFiles Contributors <hashmyfiles@example.com>
-          Depends: libgtk-4-1, libadwaita-1-0
-          Section: utils
-          Priority: optional
-          Description: File integrity scanner and verifier
-           Scans files and generates cryptographic hash databases
-           (SHA-256, SHA-512, BLAKE3) for integrity verification.
-          EOF
+          cat > dist/${PKG}/DEBIAN/control <<CONTROL
+Package: hashmyfiles
+Version: ${VERSION}
+Architecture: amd64
+Maintainer: Jegly <jegly@hashmyfiles>
+Depends: libgtk-4-1, libadwaita-1-0
+Section: utils
+Priority: optional
+Description: File integrity scanner and verifier
+ Scans files and generates cryptographic hash databases
+ (SHA-256, SHA-512, BLAKE3) for integrity verification.
+CONTROL
 
-          dpkg-deb --build --root-owner-group dist/${PKG}
-          mv dist/${PKG}.deb dist/hashmyfiles_${VERSION}_amd64.deb
-          echo "DEB_PATH=dist/hashmyfiles_${VERSION}_amd64.deb" >> $GITHUB_ENV
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          dpkg-deb --build --root-owner-group dist/${PKG} dist/${PKG}.deb
+          echo "DEB_PATH=dist/${PKG}.deb" >> $GITHUB_ENV
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
@@ -118,7 +112,7 @@ jobs:
           path: ${{ env.DEB_PATH }}
 
   # ──────────────────────────────────────────────────────────────
-  # 3. .rpm package (Fedora/RHEL) via cross-build container
+  # 3. .rpm package (Fedora)
   # ──────────────────────────────────────────────────────────────
   rpm:
     name: Build .rpm
@@ -135,7 +129,7 @@ jobs:
             gtk4-devel libadwaita-devel \
             glib2-devel pkgconf \
             cargo rust \
-            rpm-build rpmdevtools
+            rpm-build rpmdevtools python3
 
       - name: Cache Cargo
         uses: actions/cache@v4
@@ -149,51 +143,46 @@ jobs:
       - name: Build release binary
         run: cargo build --release
 
-      - name: Create RPM spec
+      - name: Build .rpm
         run: |
           VERSION=$(cargo metadata --no-deps --format-version 1 \
             | python3 -c "import sys,json; print(json.load(sys.stdin)['packages'][0]['version'])")
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
           rpmdev-setuptree
           cp target/release/hashmyfiles ~/rpmbuild/SOURCES/
           cp resources/hashmyfiles.desktop ~/rpmbuild/SOURCES/
           cp resources/icon.svg ~/rpmbuild/SOURCES/
+          mkdir -p dist
 
-          cat > ~/rpmbuild/SPECS/hashmyfiles.spec <<EOF
-          Name:           hashmyfiles
-          Version:        ${VERSION}
-          Release:        1%{?dist}
-          Summary:        File integrity scanner and verifier
-          License:        MIT
-          BuildArch:      x86_64
+          cat > ~/rpmbuild/SPECS/hashmyfiles.spec <<SPEC
+Name:           hashmyfiles
+Version:        ${VERSION}
+Release:        1%{?dist}
+Summary:        File integrity scanner and verifier
+License:        MIT
+BuildArch:      x86_64
+Requires:       gtk4 libadwaita
 
-          Requires:       gtk4 libadwaita
+%description
+Scans files and generates cryptographic hash databases (SHA-256,
+SHA-512, BLAKE3) for integrity verification.
 
-          %description
-          Scans files and generates cryptographic hash databases (SHA-256,
-          SHA-512, BLAKE3) for integrity verification. Features multi-threaded
-          scanning, interactive diff viewer, and export to TXT/JSON/CSV.
+%install
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/share/applications
+mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
+install -m755 %{_sourcedir}/hashmyfiles %{buildroot}/usr/bin/
+install -m644 %{_sourcedir}/hashmyfiles.desktop %{buildroot}/usr/share/applications/
+install -m644 %{_sourcedir}/icon.svg %{buildroot}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
 
-          %install
-          mkdir -p %{buildroot}/usr/bin
-          mkdir -p %{buildroot}/usr/share/applications
-          mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
-
-          install -m755 %{_sourcedir}/hashmyfiles %{buildroot}/usr/bin/
-          install -m644 %{_sourcedir}/hashmyfiles.desktop \
-            %{buildroot}/usr/share/applications/
-          install -m644 %{_sourcedir}/icon.svg \
-            %{buildroot}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
-
-          %files
-          /usr/bin/hashmyfiles
-          /usr/share/applications/hashmyfiles.desktop
-          /usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
-          EOF
+%files
+/usr/bin/hashmyfiles
+/usr/share/applications/hashmyfiles.desktop
+/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+SPEC
 
           rpmbuild -bb ~/rpmbuild/SPECS/hashmyfiles.spec
-          cp ~/rpmbuild/RPMS/x86_64/hashmyfiles-${VERSION}-1.*.rpm dist/ || true
+          cp ~/rpmbuild/RPMS/x86_64/hashmyfiles-*.rpm dist/
 
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
@@ -202,12 +191,12 @@ jobs:
           path: dist/*.rpm
 
   # ──────────────────────────────────────────────────────────────
-  # 4. AppImage (portable, distro-agnostic)
+  # 4. AppImage
   # ──────────────────────────────────────────────────────────────
   appimage:
     name: Build AppImage
     needs: test
-    runs-on: ubuntu-22.04   # older base = broader glibc compat
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -244,7 +233,6 @@ jobs:
           mkdir -p AppDir/usr/bin
           mkdir -p AppDir/usr/share/applications
           mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
-
           cp target/release/hashmyfiles AppDir/usr/bin/
           cp resources/hashmyfiles.desktop AppDir/usr/share/applications/
           cp resources/icon.svg AppDir/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
@@ -259,7 +247,6 @@ jobs:
             --output appimage \
             --desktop-file resources/hashmyfiles.desktop \
             --icon-file resources/icon.svg
-          ls -lh *.AppImage
           mkdir -p dist
           mv *.AppImage dist/
 
@@ -270,7 +257,7 @@ jobs:
           path: dist/*.AppImage
 
   # ──────────────────────────────────────────────────────────────
-  # 5. Create GitHub Release (on tag push only)
+  # 5. GitHub Release (tag pushes only)
   # ──────────────────────────────────────────────────────────────
   release:
     name: GitHub Release

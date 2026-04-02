@@ -49,9 +49,6 @@ sudo dpkg -i hashmyfiles_*_amd64.deb
 # Fedora / RHEL (.rpm)
 sudo rpm -i hashmyfiles-*.rpm
 
-# Any Linux (AppImage — no install required)
-chmod +x hashmyfiles-*.AppImage
-./hashmyfiles-*.AppImage
 ```
 
 ### Build from source

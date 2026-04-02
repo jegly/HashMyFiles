@@ -5,6 +5,14 @@ A professional file integrity scanner and verifier for Linux, built with **Rust 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![Rust](https://img.shields.io/badge/rust-stable-orange)
 
+
+### Screenshots
+
+<p align="center">
+  <img src="screenshots/1.png" width="49%" alt="Screenshot 1">
+  <img src="screenshots/2.png" width="49%" alt="Screenshot 2">
+</p>
+
 ---
 
 ## Features

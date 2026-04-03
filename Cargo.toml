@@ -1,9 +1,9 @@
 [package]
 name = "hashmyfiles"
-version = "1.0.0"
+version = "1.2.0"
 edition = "2021"
 description = "A professional file integrity scanner and verifier"
-authors = ["HashMyFiles Contributors"]
+authors = ["HashMyFiles CLAUDE/JEGLY"]
 license = "MIT"
 
 [[bin]]

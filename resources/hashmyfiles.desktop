@@ -8,5 +8,5 @@ Terminal=false
 Type=Application
 Categories=Utility;Security;System;
 Keywords=hash;sha256;sha512;blake3;integrity;verify;checksum;
-StartupWMClass=HashMyFiles
+StartupWMClass=hashmyfiles
 StartupNotify=true

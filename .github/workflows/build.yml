@@ -164,6 +164,6 @@ jobs:
             sudo rpm -i hashmyfiles-*.rpm
             draft: false
 prerelease: false
-files: |
-dist//*.deb
-dist//*.rpm
+          files: |
+            dist/**/*.deb
+            dist/**/*.rpm

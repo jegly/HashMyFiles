@@ -1,11 +1,12 @@
 [Desktop Entry]
 Name=HashMyFiles
-Comment=File integrity scanner and verifier
+GenericName=File Integrity Checker
+Comment=Scan and verify file integrity using cryptographic hashes
 Exec=hashmyfiles
 Icon=hashmyfiles
 Terminal=false
 Type=Application
-Categories=Utility;Security;
-Keywords=hash;sha256;integrity;verify;checksum;
-StartupWMClass=hashmyfiles
-MimeType=text/plain;
+Categories=Utility;Security;System;
+Keywords=hash;sha256;sha512;blake3;integrity;verify;checksum;
+StartupWMClass=HashMyFiles
+StartupNotify=true

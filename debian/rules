@@ -13,8 +13,22 @@ override_dh_auto_install:
 		debian/hashmyfiles/usr/bin/hashmyfiles
 	install -Dm644 resources/hashmyfiles.desktop \
 		debian/hashmyfiles/usr/share/applications/hashmyfiles.desktop
+	# SVG icon
 	install -Dm644 resources/icon.svg \
 		debian/hashmyfiles/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+	# PNG icons at all standard sizes (required for Ubuntu dock)
+	install -Dm644 resources/icons/16x16/hashmyfiles.png \
+		debian/hashmyfiles/usr/share/icons/hicolor/16x16/apps/hashmyfiles.png
+	install -Dm644 resources/icons/32x32/hashmyfiles.png \
+		debian/hashmyfiles/usr/share/icons/hicolor/32x32/apps/hashmyfiles.png
+	install -Dm644 resources/icons/48x48/hashmyfiles.png \
+		debian/hashmyfiles/usr/share/icons/hicolor/48x48/apps/hashmyfiles.png
+	install -Dm644 resources/icons/64x64/hashmyfiles.png \
+		debian/hashmyfiles/usr/share/icons/hicolor/64x64/apps/hashmyfiles.png
+	install -Dm644 resources/icons/128x128/hashmyfiles.png \
+		debian/hashmyfiles/usr/share/icons/hicolor/128x128/apps/hashmyfiles.png
+	install -Dm644 resources/icons/256x256/hashmyfiles.png \
+		debian/hashmyfiles/usr/share/icons/hicolor/256x256/apps/hashmyfiles.png
 
 override_dh_auto_test:
 	# skip tests

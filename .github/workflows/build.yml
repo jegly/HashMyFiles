@@ -64,6 +64,16 @@ jobs:
       - name: Build
         run: cargo build --release
 
+      - name: Generate PNG icons
+        run: |
+          pip install cairosvg -q --break-system-packages
+          python3 -c "
+import cairosvg, os
+for size in [16,32,48,64,128,256]:
+    os.makedirs(f'resources/icons/{size}x{size}', exist_ok=True)
+    cairosvg.svg2png(url='resources/icon.svg', write_to=f'resources/icons/{size}x{size}/hashmyfiles.png', output_width=size, output_height=size)
+"
+
       - name: Assemble .deb
         run: |
           VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
@@ -74,6 +84,10 @@ jobs:
           cp target/release/hashmyfiles dist/${PKG}/usr/bin/
           cp resources/hashmyfiles.desktop dist/${PKG}/usr/share/applications/
           cp resources/icon.svg dist/${PKG}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+          for size in 16 32 48 64 128 256; do
+            mkdir -p dist/${PKG}/usr/share/icons/hicolor/${size}x${size}/apps
+            cp resources/icons/${size}x${size}/hashmyfiles.png dist/${PKG}/usr/share/icons/hicolor/${size}x${size}/apps/hashmyfiles.png
+          done
           sed "s/VERSION_PLACEHOLDER/${VERSION}/" debian/templates/control.template > dist/${PKG}/DEBIAN/control
           dpkg-deb --build --root-owner-group dist/${PKG} dist/${PKG}.deb
           echo "DEB_PATH=dist/${PKG}.deb" >> $GITHUB_ENV

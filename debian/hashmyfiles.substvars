@@ -1,3 +1,0 @@
-shlibs:Depends=libadwaita-1-0 (>= 1.2~alpha), libc6 (>= 2.39), libgcc-s1 (>= 4.2), libglib2.0-0t64 (>= 2.54.0), libgtk-4-1 (>= 4.9.2)
-misc:Depends=
-misc:Pre-Depends=

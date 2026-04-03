@@ -2,7 +2,7 @@ use crate::ui::window::build_window;
 use libadwaita::prelude::*;
 use libadwaita::Application;
 
-pub const APP_ID: &str = "com.hashmyfiles.app";
+pub const APP_ID: &str = "io.github.jegly.HashMyFiles";
 
 pub fn build_app() -> Application {
     let app = Application::builder()

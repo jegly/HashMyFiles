@@ -1,3 +1,130 @@
+name: Build & Package
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  BINARY_NAME: hashmyfiles
+
+jobs:
+  test:
+    name: Cargo test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - run: cargo test --all
+
+  deb:
+    name: Build .deb
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config \
+            debhelper devscripts dpkg-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: deb-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build
+        run: cargo build --release
+      - name: Generate PNG icons
+        run: |
+          pip install cairosvg -q --break-system-packages
+          python3 << 'EOF'
+          import cairosvg
+          import os
+          for size in [16,32,48,64,128,256]:
+              os.makedirs(f'resources/icons/{size}x{size}', exist_ok=True)
+              cairosvg.svg2png(url='resources/icon.svg', write_to=f'resources/icons/{size}x{size}/hashmyfiles.png', output_width=size, output_height=size)
+          EOF
+      - name: Assemble .deb
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
+          PKG=hashmyfiles_${VERSION}_amd64
+          mkdir -p dist/${PKG}/DEBIAN dist/${PKG}/usr/bin \
+            dist/${PKG}/usr/share/applications \
+            dist/${PKG}/usr/share/icons/hicolor/scalable/apps
+          cp target/release/hashmyfiles dist/${PKG}/usr/bin/
+          cp resources/hashmyfiles.desktop dist/${PKG}/usr/share/applications/
+          cp resources/icon.svg dist/${PKG}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
+          for size in 16 32 48 64 128 256; do
+            mkdir -p dist/${PKG}/usr/share/icons/hicolor/${size}x${size}/apps
+            cp resources/icons/${size}x${size}/hashmyfiles.png dist/${PKG}/usr/share/icons/hicolor/${size}x${size}/apps/hashmyfiles.png
+          done
+          sed "s/VERSION_PLACEHOLDER/${VERSION}/" debian/templates/control.template > dist/${PKG}/DEBIAN/control
+          dpkg-deb --build --root-owner-group dist/${PKG} dist/${PKG}.deb
+          echo "DEB_PATH=dist/${PKG}.deb" >> $GITHUB_ENV
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashmyfiles-deb
+          path: ${{ env.DEB_PATH }}
+
+  rpm:
+    name: Build .rpm
+    needs: test
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora:40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          dnf install -y \
+            gtk4-devel libadwaita-devel glib2-devel pkgconf \
+            cargo rust rpm-build rpmdevtools python3
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rpm-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build
+        run: cargo build --release
+      - name: Assemble .rpm
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
+          rpmdev-setuptree
+          cp target/release/hashmyfiles ~/rpmbuild/SOURCES/
+          cp resources/hashmyfiles.desktop ~/rpmbuild/SOURCES/
+          cp resources/icon.svg ~/rpmbuild/SOURCES/
+          sed "s/VERSION_PLACEHOLDER/${VERSION}/" debian/templates/hashmyfiles.spec.template > ~/rpmbuild/SPECS/hashmyfiles.spec
+          mkdir -p dist
+          rpmbuild -bb ~/rpmbuild/SPECS/hashmyfiles.spec
+          cp ~/rpmbuild/RPMS/x86_64/hashmyfiles-*.rpm dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashmyfiles-rpm
+          path: dist/*.rpm
+
   release:
     name: GitHub Release
     needs: [deb, rpm]
@@ -7,11 +134,9 @@
       contents: write
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           path: dist/
-
       - uses: softprops/action-gh-release@v2
         with:
           name: "HashMyFiles ${{ github.ref_name }}"
@@ -24,8 +149,8 @@
             ```bash
             sudo dpkg -i hashmyfiles_*_amd64.deb
             sudo rpm -i hashmyfiles-*.rpm
-             draft: false
-             prerelease: false
-             files: |
-             dist//*.deb
-             dist//*.rpm
+                 draft: false
+                 prerelease: false
+                 files: |
+                 dist//*.deb
+                 dist//*.rpm

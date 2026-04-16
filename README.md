@@ -168,3 +168,5 @@ All background work runs on `std::thread` threads (not tokio). Progress updates 
 MIT — see [LICENSE](LICENSE).
 
 JEGLY / CLAUDE 
+
+![GitHub all releases](https://img.shields.io/github/downloads/jegly/HashMyFiles/total)

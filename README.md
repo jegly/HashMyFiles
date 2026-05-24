@@ -9,8 +9,8 @@ A professional file integrity scanner and verifier for Linux, built with **Rust 
 ### Screenshots
 
 <p align="center">
-  <img src="screenshots/1.png" width="49%" alt="Screenshot 1">
-  <img src="screenshots/2.png" width="49%" alt="Screenshot 2">
+  <img src="screenshots/1.png" width="100%" alt="Screenshot 1">
+  <img src="screenshots/2.png" width="100%" alt="Screenshot 2">
 </p>
 
 ---

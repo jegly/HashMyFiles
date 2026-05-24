@@ -5,8 +5,9 @@
 
 A file integrity scanner and verifier for Linux, built with **Rust + GTK4 + libadwaita**.
 
-![License: MIT](https://img.shields.io/badge/license-MIT-blue)
-![Rust](https://img.shields.io/badge/rust-stable-orange)
+ [![License: MIT](https://img.shields.io/badge/License-MIT-8be9fd.svg?labelColor=282a36)](LICENSE)
+  [![Rust](https://img.shields.io/badge/Rust-stable-ffb86c.svg?logo=rust&logoColor=ffb86c&labelColor=282a36)](https://www.rust-lang.org)
+
 
 
 ### Screenshots

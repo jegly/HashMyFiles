@@ -1,4 +1,7 @@
-# HashMyFiles
+<p align="center">
+    <img src="screenshots/HashMyFiles_banner.png" alt="HashMyFiles"/>
+  </p>
+
 
 A file integrity scanner and verifier for Linux, built with **Rust + GTK4 + libadwaita**.
 

@@ -1,6 +1,6 @@
 # HashMyFiles
 
-A professional file integrity scanner and verifier for Linux, built with **Rust + GTK4 + libadwaita**.
+A file integrity scanner and verifier for Linux, built with **Rust + GTK4 + libadwaita**.
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![Rust](https://img.shields.io/badge/rust-stable-orange)

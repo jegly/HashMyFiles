@@ -16,14 +16,14 @@ jobs:
     name: Cargo test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install deps
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -38,7 +38,7 @@ jobs:
     needs: test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install deps
         run: |
           sudo apt-get update -qq
@@ -46,7 +46,7 @@ jobs:
             libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config \
             debhelper devscripts dpkg-dev
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -82,7 +82,7 @@ jobs:
           sed "s/VERSION_PLACEHOLDER/${VERSION}/" debian/templates/control.template > dist/${PKG}/DEBIAN/control
           dpkg-deb --build --root-owner-group dist/${PKG} dist/${PKG}.deb
           echo "DEB_PATH=dist/${PKG}.deb" >> $GITHUB_ENV
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hashmyfiles-deb
           path: ${{ env.DEB_PATH }}
@@ -94,13 +94,13 @@ jobs:
     container:
       image: fedora:40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install deps
         run: |
           dnf install -y \
             gtk4-devel libadwaita-devel glib2-devel pkgconf \
             cargo rust rpm-build rpmdevtools python3
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -120,7 +120,7 @@ jobs:
           mkdir -p dist
           rpmbuild -bb ~/rpmbuild/SPECS/hashmyfiles.spec
           cp ~/rpmbuild/RPMS/x86_64/hashmyfiles-*.rpm dist/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hashmyfiles-rpm
           path: dist/*.rpm
@@ -133,11 +133,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: dist/
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           name: "HashMyFiles ${{ github.ref_name }}"
           body: |

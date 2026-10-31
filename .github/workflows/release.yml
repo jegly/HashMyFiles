@@ -4,8 +4,8 @@
 # checksum are committed to main (Cargo.toml, Cargo.lock, debian/changelog,
 # README.md).
 #
-# Ubuntu 24.04 on purpose: the .deb's library minimums come from the build
-# system (dpkg-shlibdeps), and building on 24.04 keeps it installable there.
+# Built inside the latest Ubuntu (ubuntu:latest): the .deb's library minimums
+# come from the build system (dpkg-shlibdeps), so they track the newest release.
 name: Release
 
 on:
@@ -33,21 +33,49 @@ env:
   DEB_GLOB: dist/hashmyfiles_*_amd64.deb
   # Any versioned .deb filename in README.md, rewritten to the new one.
   DEB_NAME_REGEX: 'hashmyfiles_[0-9][0-9.]*-[0-9]+_amd64\.deb'
-  CARGO_TERM_COLOR: always
 
 jobs:
   release:
     name: Build, attest and publish .deb
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    container: ubuntu:latest
+    defaults:
+      run:
+        # Container jobs default to sh; the steps use bash.
+        shell: bash
+    timeout-minutes: 60
     env:
       GH_TOKEN: ${{ github.token }}
       INPUT_VERSION: ${{ inputs.version }}
       INPUT_NOTES: ${{ inputs.notes }}
     steps:
+      - name: Install build tools
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            ca-certificates curl git gh python3 build-essential pkg-config dpkg-dev debhelper binutils \
+            libgtk-4-dev libadwaita-1-dev
+          # Latest stable Rust.
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # tags are needed to work out the version
+
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-ubuntu-latest-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-ubuntu-latest-
 
       - name: Work out version
         id: ver
@@ -88,23 +116,6 @@ jobs:
             echo "last_tag=${last_tag:+$last_raw}" # real tag name
           } >> "$GITHUB_OUTPUT"
           echo "Releasing **v$version**. Previous release: ${last_raw:-none}" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Install build tools
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            debhelper dpkg-dev pkg-config libgtk-4-dev libadwaita-1-dev
-          rustup update stable --no-self-update
-          rustup default stable
-
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: cargo-24.04-${{ hashFiles('Cargo.lock') }}
-          restore-keys: cargo-24.04-
 
       - name: Build .deb
         env:

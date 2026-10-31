@@ -1,156 +1,64 @@
-name: Build & Package
+# Runs the tests and builds the .deb (dpkg-buildpackage with debian/) on every
+# push to main and every PR, including Dependabot's.
+# Nothing is published from here; see release.yml.
+#
+# Ubuntu 24.04 on purpose: the .deb's library minimums come from the build
+# system (dpkg-shlibdeps), and building on 24.04 keeps it installable there.
+name: Build
 
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
-  BINARY_NAME: hashmyfiles
 
 jobs:
-  test:
-    name: Cargo test
+  build:
+    name: Test and build .deb
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
-      - name: Install deps
+
+      - name: Install build tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
-            libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-      - run: cargo test --all
+            debhelper dpkg-dev pkg-config libgtk-4-dev libadwaita-1-dev
+          rustup update stable --no-self-update
+          rustup default stable
 
-  deb:
-    name: Build .deb
-    needs: test
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-      - name: Install deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config \
-            debhelper devscripts dpkg-dev
-      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: deb-${{ hashFiles('**/Cargo.lock') }}
-      - name: Build
-        run: cargo build --release
-      - name: Generate PNG icons
+          key: cargo-24.04-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-24.04-
+
+      - name: Tests
+        run: cargo test --all
+
+      # -d: Rust comes from rustup, not the apt cargo/rustc in Build-Depends.
+      - name: Build .deb
         run: |
-          pip install cairosvg -q --break-system-packages
-          python3 << 'EOF'
-          import cairosvg
-          import os
-          for size in [16,32,48,64,128,256]:
-              os.makedirs(f'resources/icons/{size}x{size}', exist_ok=True)
-              cairosvg.svg2png(url='resources/icon.svg', write_to=f'resources/icons/{size}x{size}/hashmyfiles.png', output_width=size, output_height=size)
-          EOF
-      - name: Assemble .deb
-        run: |
-          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
-          PKG=hashmyfiles_${VERSION}_amd64
-          mkdir -p dist/${PKG}/DEBIAN dist/${PKG}/usr/bin \
-            dist/${PKG}/usr/share/applications \
-            dist/${PKG}/usr/share/icons/hicolor/scalable/apps
-          cp target/release/hashmyfiles dist/${PKG}/usr/bin/
-          cp resources/hashmyfiles.desktop dist/${PKG}/usr/share/applications/
-          cp resources/icon.svg dist/${PKG}/usr/share/icons/hicolor/scalable/apps/hashmyfiles.svg
-          for size in 16 32 48 64 128 256; do
-            mkdir -p dist/${PKG}/usr/share/icons/hicolor/${size}x${size}/apps
-            cp resources/icons/${size}x${size}/hashmyfiles.png dist/${PKG}/usr/share/icons/hicolor/${size}x${size}/apps/hashmyfiles.png
-          done
-          sed "s/VERSION_PLACEHOLDER/${VERSION}/" debian/templates/control.template > dist/${PKG}/DEBIAN/control
-          dpkg-deb --build --root-owner-group dist/${PKG} dist/${PKG}.deb
-          echo "DEB_PATH=dist/${PKG}.deb" >> $GITHUB_ENV
+          dpkg-buildpackage -b -us -uc -d
+          mkdir -p dist && mv ../hashmyfiles_*_amd64.deb dist/
+
       - uses: actions/upload-artifact@v7
         with:
-          name: hashmyfiles-deb
-          path: ${{ env.DEB_PATH }}
-
-  rpm:
-    name: Build .rpm
-    needs: test
-    runs-on: ubuntu-24.04
-    container:
-      image: fedora:40
-    steps:
-      - uses: actions/checkout@v7
-      - name: Install deps
-        run: |
-          dnf install -y \
-            gtk4-devel libadwaita-devel glib2-devel pkgconf \
-            cargo rust rpm-build rpmdevtools python3
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: rpm-${{ hashFiles('**/Cargo.lock') }}
-      - name: Build
-        run: cargo build --release
-      - name: Assemble .rpm
-        run: |
-          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "//;s/"//')
-          rpmdev-setuptree
-          cp target/release/hashmyfiles ~/rpmbuild/SOURCES/
-          cp resources/hashmyfiles.desktop ~/rpmbuild/SOURCES/
-          cp resources/icon.svg ~/rpmbuild/SOURCES/
-          sed "s/VERSION_PLACEHOLDER/${VERSION}/" debian/templates/hashmyfiles.spec.template > ~/rpmbuild/SPECS/hashmyfiles.spec
-          mkdir -p dist
-          rpmbuild -bb ~/rpmbuild/SPECS/hashmyfiles.spec
-          cp ~/rpmbuild/RPMS/x86_64/hashmyfiles-*.rpm dist/
-      - uses: actions/upload-artifact@v7
-        with:
-          name: hashmyfiles-rpm
-          path: dist/*.rpm
-
-  release:
-    name: GitHub Release
-    needs: [deb, rpm]
-    runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
-        with:
-          path: dist/
-      - uses: softprops/action-gh-release@v3
-        with:
-          name: "HashMyFiles ${{ github.ref_name }}"
-          body: |
-            ## HashMyFiles ${{ github.ref_name }}
-            | Package | Platform |
-            |---------|----------|
-            | `.deb`  | Ubuntu 23.04+, Debian 12+ |
-            | `.rpm`  | Fedora 38+, RHEL 9+ |
-            ```bash
-            sudo dpkg -i hashmyfiles_*_amd64.deb
-            sudo rpm -i hashmyfiles-*.rpm
-                 draft: false
-                 prerelease: false
-                 files: |
-                 dist//*.deb
-                 dist//*.rpm
+          name: deb
+          path: dist/*.deb
+          if-no-files-found: error
+          retention-days: 14

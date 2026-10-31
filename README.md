@@ -52,6 +52,18 @@ sudo dpkg -i hashmyfiles_*_amd64.deb
 
 ```
 
+<!-- release-checksums:start -->
+| File | SHA-256 |
+|---|---|
+| `hashmyfiles_1.2.0-1_amd64.deb` | *sha256:f2df229b4e0f3180651cb4e1623656adccaa6049abee18eb5c84e367afc53c5e* |
+
+Verify a download:
+
+```bash
+sha256sum hashmyfiles_1.2.0-1_amd64.deb
+```
+<!-- release-checksums:end -->
+
 ### Build from source
 
 **Requirements:** Ubuntu 23.04+ or equivalent with GTK 4.10+

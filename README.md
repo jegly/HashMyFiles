@@ -55,13 +55,15 @@ sudo dpkg -i hashmyfiles_*_amd64.deb
 <!-- release-checksums:start -->
 | File | SHA-256 |
 |---|---|
-| `hashmyfiles_1.2.0-1_amd64.deb` | *sha256:f2df229b4e0f3180651cb4e1623656adccaa6049abee18eb5c84e367afc53c5e* |
+| `hashmyfiles_1.2.1-1_amd64.deb` | *sha256:f6d10b8bc695c2542b0ef83430aabcb27f594750668a7ac8608e1613970de122* |
 
 Verify a download:
 
 ```bash
-sha256sum hashmyfiles_1.2.0-1_amd64.deb
+sha256sum hashmyfiles_1.2.1-1_amd64.deb
 ```
+
+The [build attestation](https://github.com/jegly/HashMyFiles/attestations) shows it was built by this repository's release workflow (with the GitHub CLI: `gh attestation verify hashmyfiles_1.2.1-1_amd64.deb --repo jegly/HashMyFiles`).
 <!-- release-checksums:end -->
 
 ### Build from source

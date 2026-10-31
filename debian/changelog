@@ -1,3 +1,9 @@
+hashmyfiles (1.2.1-1) unstable; urgency=medium
+
+  * Release 1.2.1. Changes: https://github.com/jegly/HashMyFiles/releases/tag/v1.2.1
+
+ -- Jegly <jegly@hashmyfiles>  Sat, 31 Oct 2026 20:43:02 +0000
+
 hashmyfiles (1.2.0-1) unstable; urgency=medium
 
   * Initial release by Jegly.

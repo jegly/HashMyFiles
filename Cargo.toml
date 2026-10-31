@@ -1,6 +1,6 @@
 [package]
 name = "hashmyfiles"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 description = "A professional file integrity scanner and verifier"
 authors = ["HashMyFiles CLAUDE/JEGLY"]
